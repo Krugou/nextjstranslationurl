@@ -88,15 +88,18 @@ const pageComponents = {
 
 export default async function DynamicPage({ params }: PageProps) {
   const { locale, slug } = await params
-  
+
+  // Decode slug to handle URL-encoded characters
+  const decodedSlug = decodeURIComponent(slug)
+
   // Get the route key from the localized slug
-  const routeKey = getRouteKeyFromSlug(slug, locale as Locale)
-  
+  const routeKey = getRouteKeyFromSlug(decodedSlug, locale as Locale)
+
   if (!routeKey || !(routeKey in pageComponents)) {
     notFound()
   }
-  
+
   const Component = pageComponents[routeKey as keyof typeof pageComponents]
-  
+
   return <Component locale={locale as Locale} />
 }
