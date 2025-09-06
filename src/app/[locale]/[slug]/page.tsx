@@ -1,9 +1,26 @@
 import { notFound } from 'next/navigation'
-import { t, type Locale } from '@/lib/i18n'
-import { getRouteKeyFromSlug } from '@/lib/routeTranslations'
+import { t, type Locale, locales } from '@/lib/i18n'
+import { getRouteKeyFromSlug, getRouteKeys, getLocalizedSlug } from '@/lib/routeTranslations'
 
 interface PageProps {
   params: Promise<{ locale: string; slug: string }>
+}
+
+export async function generateStaticParams() {
+  const params = []
+  
+  for (const locale of locales) {
+    const routeKeys = getRouteKeys()
+    for (const routeKey of routeKeys) {
+      const slug = getLocalizedSlug(routeKey, locale)
+      params.push({
+        locale,
+        slug,
+      })
+    }
+  }
+  
+  return params
 }
 
 // Page components for each route
@@ -88,15 +105,18 @@ const pageComponents = {
 
 export default async function DynamicPage({ params }: PageProps) {
   const { locale, slug } = await params
-  
+
+  // Decode slug to handle URL-encoded characters
+  const decodedSlug = decodeURIComponent(slug)
+
   // Get the route key from the localized slug
-  const routeKey = getRouteKeyFromSlug(slug, locale as Locale)
-  
+  const routeKey = getRouteKeyFromSlug(decodedSlug, locale as Locale)
+
   if (!routeKey || !(routeKey in pageComponents)) {
     notFound()
   }
-  
+
   const Component = pageComponents[routeKey as keyof typeof pageComponents]
-  
+
   return <Component locale={locale as Locale} />
 }

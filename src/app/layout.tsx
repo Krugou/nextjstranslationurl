@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { headers } from 'next/headers'
-import { defaultLocale, isValidLocale } from '@/lib/i18n'
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -8,21 +6,13 @@ export const metadata: Metadata = {
   description: "Next.js application with internationalization for URL translation",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const headersList = await headers()
-  const pathname = headersList.get('x-pathname') || '/'
-  
-  // Extract locale from pathname
-  const segments = pathname.split('/')
-  const localeSegment = segments[1]
-  const locale = isValidLocale(localeSegment) ? localeSegment : defaultLocale
-
   return (
-    <html lang={locale}>
+    <html>
       <body className="antialiased">
         {children}
       </body>
