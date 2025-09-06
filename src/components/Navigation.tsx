@@ -3,55 +3,32 @@
 import Link from 'next/link'
 import { locales, type Locale, t } from '@/lib/i18n'
 import { usePathname } from 'next/navigation'
+import { getLocalizedSlug, getRouteKeyFromSlug, getRouteKeys } from '@/lib/routeTranslations'
 
 interface NavigationProps {
   locale: Locale
 }
 
-// Add localized slugs for each route
-const routeSlugs: Record<Locale, Record<string, string>> = {
-  en: {
-    home: 'home',
-    about: 'about',
-    help: 'help',
-    onboarding: 'onboarding',
-    profile: 'profile',
-  },
-  fi: {
-    home: 'koti',
-    about: 'tietoa',
-    help: 'apua',
-    onboarding: 'aloitus',
-    profile: 'profiili',
-  },
-  sv: {
-    home: 'hem',
-    about: 'om',
-    help: 'hjälp',
-    onboarding: 'introduktion',
-    profile: 'profil',
-  },
-  // Add other locales here
-}
-
 export default function Navigation({ locale }: NavigationProps) {
   const pathname = usePathname()
 
-  // Use route keys and localized slugs
-  const routeKeys = ['home', 'about', 'help', 'onboarding', 'profile']
+  // Use route keys and localized slugs from centralized translations
+  const routeKeys = getRouteKeys()
   const routes = routeKeys.map((key) => ({
-    href: `/${locale}/${routeSlugs[locale][key]}`,
+    href: `/${locale}/${getLocalizedSlug(key, locale)}`,
     label: t(locale, `common.${key}`),
   }))
 
   const switchLocale = (newLocale: Locale) => {
     // Find current route key by matching pathname with current locale's slugs
     const currentSlug = pathname.split('/')[2]
-    const routeKey = Object.entries(routeSlugs[locale]).find(
-      ([, slug]) => slug === currentSlug
-    )?.[0] || 'home'
+    if (!currentSlug) return `/${newLocale}/${getLocalizedSlug('home', newLocale)}`
+    
+    const routeKey = getRouteKeyFromSlug(currentSlug, locale)
+    if (!routeKey) return `/${newLocale}/${getLocalizedSlug('home', newLocale)}`
+    
     // Use new locale's slug for the same route
-    return `/${newLocale}/${routeSlugs[newLocale][routeKey]}`
+    return `/${newLocale}/${getLocalizedSlug(routeKey, newLocale)}`
   }
 
   return (
