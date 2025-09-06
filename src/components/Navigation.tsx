@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { locales, type Locale, t } from '@/lib/i18n'
 import { usePathname } from 'next/navigation'
+import { getLocalizedSlug, getRouteKeyFromSlug, getRouteKeys } from '@/lib/routeTranslations'
 
 interface NavigationProps {
   locale: Locale
@@ -11,17 +12,23 @@ interface NavigationProps {
 export default function Navigation({ locale }: NavigationProps) {
   const pathname = usePathname()
 
-  const routes = [
-    { href: `/${locale}`, label: t(locale, 'common.home') },
-    { href: `/${locale}/about`, label: t(locale, 'common.about') },
-    { href: `/${locale}/help`, label: t(locale, 'common.help') },
-    { href: `/${locale}/onboarding`, label: t(locale, 'common.onboarding') },
-    { href: `/${locale}/profile`, label: t(locale, 'common.profile') },
-  ]
+  // Use route keys and localized slugs from centralized translations
+  const routeKeys = getRouteKeys()
+  const routes = routeKeys.map((key) => ({
+    href: `/${locale}/${getLocalizedSlug(key, locale)}`,
+    label: t(locale, `common.${key}`),
+  }))
 
   const switchLocale = (newLocale: Locale) => {
-    const currentPath = pathname.split('/').slice(2).join('/')
-    return `/${newLocale}${currentPath ? `/${currentPath}` : ''}`
+    // Find current route key by matching pathname with current locale's slugs
+    const currentSlug = pathname.split('/')[2]
+    if (!currentSlug) return `/${newLocale}/${getLocalizedSlug('home', newLocale)}`
+    
+    const routeKey = getRouteKeyFromSlug(currentSlug, locale)
+    if (!routeKey) return `/${newLocale}/${getLocalizedSlug('home', newLocale)}`
+    
+    // Use new locale's slug for the same route
+    return `/${newLocale}/${getLocalizedSlug(routeKey, newLocale)}`
   }
 
   return (
@@ -43,7 +50,7 @@ export default function Navigation({ locale }: NavigationProps) {
               </Link>
             ))}
           </div>
-          
+
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-500">{t(locale, 'common.language')}:</span>
             <div className="flex space-x-2">
